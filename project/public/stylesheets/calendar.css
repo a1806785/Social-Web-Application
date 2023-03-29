@@ -1,0 +1,14 @@
+p {
+    text-align: center;
+    font-size: 30px;
+}
+
+button {
+    text-align: center;
+    margin-left: 300px;
+    font-size: 25px;
+}
+
+#calendar {
+    text-align: center;
+}

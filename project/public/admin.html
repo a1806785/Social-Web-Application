@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AoX49FSC32Qlhl-5Q1Vh9SJYVGGjtzczY8y9alyW92Y" />
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://fonts.googlefonts.cn/css?family=Courgette%7CDancing+Script%7CGreat+Vibes" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/ca2d1d9ef6.js" crossorigin="anonymous"></script>
+    <!-- <script type="module" src="/javascripts/change.js"></script> -->
+    <title>Activity</title>
+</head>
+<body onload="show_event()">
+
+    <div class="container" id="app">
+
+<!-- the top navgation -->
+    <nav class="navigation">
+        <h1>
+            OurActivity
+        </h1>
+        <button class="cta" v-on:click="event_active = true">
+            <span>Create event</span>
+            <!-- create a new act -->
+        </button>
+    <!-- sign in -->
+    <i id="user" class="fas fa-user-circle fa-2xl" v-on:click="link_to_sign_in" title="Log In"><span id="log_in">Log In</span></i>
+    </nav>
+
+    <div class="popup_event" v-bind:class="{ 'open_popup_event': event_active }" id="popup_event">
+        <div class="form_box event">
+            <form action="#">
+                <span class="close_btn" v-on:click="event_active = false">&times;</span>
+                <h1>Create event</h1>
+                <div class="event">Start time:<input id="event_time" type="datetime-local" min="2022-01-01T00:00" v-model="start_time_input"></div>
+                <div class="event">End time:<input id="event_time" type="datetime-local" min="2022-01-01T00:00" v-model="end_time_input"></div>
+                <div class="event">Event name:<input id="event_name" type="text" placeholder="Event name" v-model="name_input"></div>
+                <textarea class="desc_event" rows="4" cols="58" v-model="desc_input" placeholder="Briefly describe the event"></textarea>
+                <button class="create_event" v-on:click="event_active = false;add_event()">Create event</button>
+            </form>
+        </div>
+    </div>
+
+<!-- the main box to display the activities -->
+    <div class="main">
+        <!-- the left nav -->
+        <div class="setting">
+            <!-- Home -->
+            <a href="#" class="guide" v-on:click="info_active = false;calender_active = false;list_active = false;delete_event_active = false;sign_up_active = false;desc_active = false;delete_event_active = false;people_active = false;delete_people_active = false"><i class="fa-solid fa-house-user fa-2xl"></i><span>Home</span></a>
+            <a href="#" class="guide" v-on:click="info_active = true;modify_active = true;get_information()"><i class="fas fa-user-circle fa-2xl"></i><span>User Information</span></a>
+            <div class="popup_info" v-bind:class="{ 'open_popup_info': info_active }" id="popup_info">
+                <span class="close_btn" v-on:click="info_active = false">&times;</span>
+				<div class="info">Username: <input class="user_info" type="text" value="********" v-bind:readonly="modify_active"></div>
+                <div class="info">Email: <input class="user_info" type="email" value="*******@gmail.com" v-bind:readonly="modify_active"></div>
+                <div class="info">Password: <input class="user_info" type="text" value="********" v-bind:readonly="modify_active"></div>
+                <button class="modify" v-on:click="modify_active = false">Modify</button>
+                <button class="finish" v-on:click="info_active = false">Finish</button>
+			</div>
+
+            <!-- Calander -->
+            <a href="#" class="guide" v-on:click="calender_active = true;link_to_calendar()"><i class="fa-solid fa-calendar-days"></i><span>Calendar</span></a>
+            <!-- <div class="popup_calender" v-bind:class="{ 'open_popup_calender': calender_active }" id="popup_calender">
+				<iframe id="calender" src="https://calendar.google.com/calendar/embed?src=ro6naq38vpeaek82hemruejb6c%40group.calendar.google.com&ctz=Asia%2FHong_Kong" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+			</div> -->
+            <!-- Query Activity -->
+            <a href="#" class="guide" v-on:click="list_active = true"><i class="fa-solid fa-magnifying-glass"></i><span>Query Activity</span></a>
+            <div class="popup_list" v-bind:class="{ 'open_popup_list': list_active }" id="popup_list">
+                <span class="close_btn" v-on:click="list_active = false">&times;</span>
+				<ul>
+                    <p class="event_text">Start time &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; End time</p>
+                    <li v-for="item in event" class="event_text">{{ item.start_time }} &nbsp;&nbsp; {{ item.end_time }} &nbsp;&nbsp; {{ item.name }}</li>
+                </ul>
+			</div>
+            <!-- Delete Activity -->
+            <a href="#" class="guide" v-on:click="delete_event_active = true"><i class="fa-solid fa-trash-can"></i><span>Delete Activity</span></a>
+            <div class="popup_delete" v-bind:class="{ 'open_popup_delete': delete_event_active }" id="popup_delete">
+                <span class="close_btn" v-on:click="delete_event_active = false">&times;</span>
+				<ul>
+                    <p class="event_text">Start time &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; End time</p>
+                    <li v-for="(item, index) in event" class="event_text">{{ item.start_time }} &nbsp;&nbsp; {{ item.end_time }} &nbsp;&nbsp; {{ item.name }} &nbsp;&nbsp;<button v-on:click="delete_index = index;delete_event()">delete</button></li>
+                </ul>
+			</div>
+            <!-- Query People -->
+            <a href="#" class="guide" v-on:click="add_people()"><i class="fa-solid fa-people-group"></i><span>Query People</span></a>
+            <div class="popup_people" v-bind:class="{ 'open_popup_people': people_active }" id="popup_people">
+                <span class="close_btn" v-on:click="people_active = false">&times;</span>
+				<ul class="people">
+                    <!-- <li v-for="item in event" class="event_text">{{ item.time }} &nbsp;&nbsp; {{ item.name }}</li> -->
+                </ul>
+			</div>
+            <!-- Delete People -->
+            <a href="#" class="guide" v-on:click="popup_delete_people()"><i class="fa-solid fa-user-xmark"></i><span>Delete People</span></a>
+            <div class="popup_delete_people" v-bind:class="{ 'open_popup_delete_people': delete_people_active }" id="popup_delete_people">
+                <span class="close_btn" v-on:click="delete_people_active = false">&times;</span>
+				<ul class="people">
+
+                </ul>
+			</div>
+            <!-- Sign New Admin -->
+            <a href="#" class="guide" v-on:click="sign_up_active = true"><i class="fa-solid fa-crown"></i><span>Sign New Admin</span></a>
+            <div class="popup_sign_up" v-bind:class="{ 'open_popup_sign_up': sign_up_active }" id="popup_sign_up">
+				<div class="form_box sign_up">
+					<form action="javascript:void(0);" method="post">
+						<span class="close_btn" v-on:click="sign_up_active = false">&times;</span>
+						<h1>Administrator Sign Up</h1>
+						<input type="text" placeholder="Username" name="username">
+						<input type="email" placeholder="Email" name="email">
+						<input id="psw" type="password" placeholder="Password" name="password">
+                        <i class="far fa-eye" id="show_psw1"></i>
+						<input id="confirm_psw" type="password" placeholder="Confirm password">
+                        <i class="far fa-eye" id="show_psw2"></i>
+                        <input type="text" placeholder="Administrator code" name="code">
+                        <button class="sign_up_btn" v-on:click="sign_up_active = false;admin_sign_up()">Sign up</button>
+					</form>
+				</div>
+			</div>
+        </div>
+
+        <!-- main img to dis acts -->
+        <div class="mid">
+
+            <div class="actname">
+                <input type="text" name="text" class="input" placeholder="Type something here....">
+
+                <h2>Start time &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; End time</h2>
+            </div>
+
+            <div class="card">
+                <div class="content">
+                    <a href="#"><img src="/images/1.jpg" alt="">
+                        <ul>
+                            <li v-for="(item, index) in event" class="event_text">{{ item.start_time }} &nbsp;&nbsp; {{ item.end_time }} &nbsp;&nbsp; {{ item.name }} &nbsp;&nbsp;<button class="desc_btn" v-on:click="item_index = index;desc_active = true;show_detail_active = true;">view details</button></li>
+                        </ul>
+                    </a>
+                </div>
+            </div>
+
+            <div class="popup_desc" v-bind:class="{ 'open_popup_desc': desc_active }" id="popup_desc">
+                    <span class="close_btn" v-on:click="desc_active = false;show_detail_active = false;">&times;</span>
+                    <h4>Event details</h4>
+                    <div id="detail">{{ show_detail }}</div>
+            </div>
+
+        </div>
+
+
+        <div class="comments">
+            <h1>New Event</h1>
+            <div class="newAct scard">
+                <h2 class="text-time">{{ show_time_1 }}</h2>
+                <h2 class="text-title">{{ show_name_1 }}</h2>
+                <p class="text-body">{{ show_detail_1 }}</p>
+            </div>
+
+            <div class="otherAct scard">
+                <h2 class="text-time">{{ show_time_2 }}</h2>
+                <h2 class="text-title">{{ show_name_2 }}</h2>
+                <p class="text-body">{{ show_detail_2 }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    </div>
+
+    <script src="/javascripts/admin.js"></script>
+</body>
+</html>
